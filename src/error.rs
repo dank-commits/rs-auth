@@ -24,3 +24,27 @@ impl ResponseError for ServiceError {
         }
     }
 }
+
+impl From<ParseError> for ServiceError {
+    fn from(_: ParseError) -> ServiceError {
+        ServiceError::BadRequest("Invalid UUID".into())
+    }
+}
+
+impl From<r2d2::Error> for ServiceError {
+    fn from(_: r2d2::Error) -> Self {
+        ServiceError::InternalServerError
+    }
+}
+
+impl From<DieselError> for ServiceError {
+    fn from(error: DieselError) -> Self {
+        match error {
+            DieselError::DatabaseError(kind, info) => match kind {
+                DatabaseErrorKind::UniqueViolation => ServiceError::BadRequest(info.message().to_string()),
+                _ => ServiceError::InternalServerError,
+            },
+            _ => ServiceError::InternalServerError,
+        }
+    }
+}
