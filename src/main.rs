@@ -9,10 +9,10 @@ use actix_web::{cookie::Key, middleware, web, App, HttpServer};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 
+mod error;
 mod models;
 mod routes;
 mod schema;
-mod error;
 mod utils;
 
 #[actix_rt::main]
@@ -59,19 +59,20 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/api/v1")
                     .service(
                         web::resource("/register")
-                            .route(web::post().to(routes::auth::generate_invitation))
+                            .route(web::post().to(routes::register::generate_invitation))
                     )
                     .service(
                         web::resource("/register/{invitation_id}")
                             //.route(web::get().to(routes::auth::check_invitation))
-                            .route(web::post().to(routes::auth::register)),
+                            .route(web::post().to(routes::register::register_user))
                     )
                     .service(
-                web::resource("/auth"), 
-                    //.route(web::post().to(routes::auth::login))
-                    //.route(web::delete().to(routes::auth::logout))
-                    //.route(web::get().to(routes::auth::get_me))
-            ))
+                        web::resource("/auth")
+                            .route(web::post().to(routes::auth::login))
+                            .route(web::delete().to(routes::auth::logout))
+                            .route(web::get().to(routes::auth::get_me))
+                    ),
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()
