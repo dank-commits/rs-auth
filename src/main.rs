@@ -13,6 +13,7 @@ mod models;
 mod routes;
 mod schema;
 mod error;
+mod utils;
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
@@ -54,10 +55,22 @@ async fn main() -> std::io::Result<()> {
                 secret_key.clone(),
             ))
             .app_data(web::JsonConfig::default().limit(4096))
-            .service(web::scope("/api/v1").service(
-                web::resource("/auth"), //.route(web::post().to(routes::auth::login))
-                                        //.route(web::delete().to(routes::auth::logout))
-                                        //.route(web::get().to(routes::auth::get_me))
+            .service(
+                web::scope("/api/v1")
+                    .service(
+                        web::resource("/register")
+                            .route(web::post().to(routes::auth::generate_invitation))
+                    )
+                    .service(
+                        web::resource("/register/{invitation_id}")
+                            //.route(web::get().to(routes::auth::check_invitation))
+                            .route(web::post().to(routes::auth::register)),
+                    )
+                    .service(
+                web::resource("/auth"), 
+                    //.route(web::post().to(routes::auth::login))
+                    //.route(web::delete().to(routes::auth::logout))
+                    //.route(web::get().to(routes::auth::get_me))
             ))
     })
     .bind("127.0.0.1:8080")?
